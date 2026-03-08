@@ -2,6 +2,18 @@ import cv2 as cv
 import numpy as np 
 import math
 from config import COLOR_THRESHOLD_MAP, CAMERA_INDEX
+import time
+
+prevTime = 0
+def fpsCounter(frame):
+
+    global prevTime
+    currentTime = time.time()
+
+    fps = 1 / (currentTime - prevTime)
+    prevTime = currentTime
+
+    return fps
 
 def getObjectCenterCoordinates(contour):
     
@@ -73,6 +85,7 @@ def testOnImage():
     print(f"number of detected boxes : {len(targets)}")
 
     for index, target in enumerate(targets):
+
         cX, cY = target["center"]
         distance = target["distance"]
         name = target["colourName"]
@@ -81,7 +94,7 @@ def testOnImage():
         cv.circle(frame, (cX, cY), 5, (0,0,0), -1)
         infoText = f"#{index+1} {name.upper()} (Dist: {int(distance)})"
         cv.putText(frame, infoText, (cX - 20, cY - 20), 
-                    cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
+                    cv.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2)
         
     cv.imshow("Test", frame)
 
@@ -95,14 +108,15 @@ def testOnLive():
 
 
     cap = cv.VideoCapture(CAMERA_INDEX)
+    cap.set(cv.CAP_PROP_FRAME_WIDTH, 1024)
+    cap.set(cv.CAP_PROP_FRAME_HEIGHT, 720)
 
     while cap.isOpened():
-        ret, frame = cap.read()
+        _, frame = cap.read()
         height, width = frame.shape[:2]
 
-        if ret:
-            print("camera opened!")
         targets = processFrame(frame, COLOR_THRESHOLD_MAP)
+        fps = fpsCounter(frame)
 
 
         for index, target in enumerate(targets):
@@ -111,14 +125,17 @@ def testOnLive():
             name = target["colourName"]
 
             if len(targets) > 0:
-                print(f"number of detected boxes : {len(targets)}")
+                countText = f"Detected Boxes: {len(targets)}"
+                cv.putText(frame, countText, (20, 40), cv.FONT_HERSHEY_SIMPLEX, 1.7, (0, 255, 255), 5)
                 cv.drawContours(frame, target["contour"], -1, (0,0,0), 5)
                 cv.circle(frame, (cX, cY), 5, (0,0,0), -1)
                 cv.circle(frame, ((width // 2), (height // 2)), 5, (0,255,0), -1)
                 infoText = f"#{index+1} {name.upper()} (Dist: {int(distance)})"
                 cv.putText(frame, infoText, (cX - 20, cY - 20), 
-                            cv.FONT_HERSHEY_SIMPLEX, 0.5, (255, 255, 255), 2)
-            
+                            cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+                fpsText = f"FPS: {int(fps)}"
+                cv.putText(frame, fpsText, (20, 70), cv.FONT_HERSHEY_SIMPLEX, 1.7, (0, 255, 0), 5)
+                
         cv.imshow("Test on Live", frame)
 
         key = cv.waitKey(1)
