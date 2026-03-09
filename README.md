@@ -1,12 +1,6 @@
-Harika Berkay, gelecek vizyonunu ve versiyon planlarını da ekleyerek projeyi profesyonel bir mühendislik dökümanına dönüştürdüm. Bu README, portfolyonda projenin sadece koddan ibaret olmadığını, bir yol haritasına (roadmap) sahip olduğunu gösterecektir.
+# VisionArm: Vision-Based Autonomous Robotic Arm (V1)
 
-İşte projenin son hali için hazırladığım kapsamlı **README.md**:
-
----
-
-# VisionArm-AI: Vision-Based Autonomous Robotic Arm (V1)
-
-VisionArm-AI, görüntü işleme tekniklerini kullanarak nesneleri renklerine göre sınıflandıran ve belirlenen konumlara taşıyan otonom bir "pick-and-place" robot kol sistemidir. Bu proje; **OpenCV**, **Python tabanlı otomasyon** ve **Arduino kontrollü donanım** entegrasyonunun bir sonucudur.
+VisionArm, görüntü işleme tekniklerini kullanarak nesneleri renklerine göre sınıflandıran ve belirlenen konumlara taşıyan otonom bir "pick-and-place" robot kol sistemidir. Bu proje; **OpenCV**, **Python tabanlı otomasyon** ve **Arduino kontrollü donanım** entegrasyonunun bir sonucudur.
 
 ## 🚀 Genel Bakış
 
