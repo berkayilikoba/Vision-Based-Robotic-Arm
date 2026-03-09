@@ -1,150 +1,100 @@
-import cv2 as cv
+import cv2 as cv 
 import numpy as np 
-import math
-from config import COLOR_THRESHOLD_MAP, CAMERA_INDEX
-import time
+from config import MIN_DETECTION_AREA, COLOR_THRESHOLD_MAP, TEST_IMAGES_DIR, CAMERA_INDEX
+import os 
 
-prevTime = 0
-def fpsCounter(frame):
 
-    global prevTime
-    currentTime = time.time()
+def getTestImages(filename):
+    return os.path.join(TEST_IMAGES_DIR, filename)
 
-    fps = 1 / (currentTime - prevTime)
-    prevTime = currentTime
 
-    return fps
-
-def getObjectCenterCoordinates(contour):
-    
-    moments = cv.moments(contour)
-
-    if moments["m00"] != 0:
-
-        centerX = int(moments["m10"] / moments["m00"])
-        centerY = int(moments["m01"] / moments["m00"])
-
-        return (centerX, centerY)
-    
-    return None
-
-def calculateDistanceToCenter(objectX, objectY, cameraW, cameraH):
-
-    cameraCenterX = cameraW // 2
-    cameraCenterY = cameraH // 2
-
-    distance = math.sqrt((objectX - cameraCenterX) ** 2 + (objectY - cameraCenterY) ** 2)
-
-    return distance
-
-def processFrame(frame, colourMap):
-
-    height, width = frame.shape[:2]
-    detectedBoxes = []
+def getColourName(frame, imshow = False):
 
     hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
 
-    for colourName, thresholds in colourMap.items():
+    detectedColour = None
+    maxArea = 0
+    bestContour = None
+    center = None, None
 
-        mask = cv.inRange(hsvFrame, thresholds["lower"], thresholds["upper"])
-        kernel = np.ones((5,5), np.uint8)
-        mask = cv.morphologyEx(mask, cv.MORPH_OPEN, kernel)
+    for name, limits in COLOR_THRESHOLD_MAP.items():
+
+        mask = cv.inRange(hsvFrame, limits["lower"], limits["upper"])
+
+        mask = cv.erode(mask, None, iterations=2)
+        mask = cv.dilate(mask, None, iterations=2)
 
         contours, _ = cv.findContours(mask, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
 
-        if contours:
+        for cnt in contours:
 
-            largestContour = max(contours, key = cv.contourArea)
-
-            if cv.contourArea(largestContour) > 1500:
-                coordinates = getObjectCenterCoordinates(largestContour)
-
-                if coordinates:
-
-                    distance = calculateDistanceToCenter(coordinates[0], coordinates[1], width, height)
-
-                detectedBoxes.append({
-                    "colourName" : colourName,
-                    "center" : coordinates,
-                    "distance" : distance,
-                    "contour" : largestContour
-                }) 
+            area = cv.contourArea(cnt)
 
 
-    return sorted(detectedBoxes, key = lambda x: x["distance"])
 
-def testOnImage():
-    imagePath = "/Users/berkayilikoba/Desktop/Vision-Based-Robotic-Arm/v1/test-images/testImage1.jpeg" 
-    frame = cv.imread(imagePath)
+            if area > MIN_DETECTION_AREA and area > maxArea:
+                maxArea = area
+                detectedColour = name
+                bestContour = cnt
 
-    if frame is None:
-        print("Error!")
+        if detectedColour is not None and bestContour is not None:
+            cv.drawContours(frame, [bestContour], -1, (0,255,0), 5)
+            infoText = f"{detectedColour.upper()} | Area: {int(maxArea)}"
+            cv.putText(frame, infoText, (50, 20), 
+                        cv.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 255), 2)
+            
+            M = cv.moments(bestContour)
 
-    targets = processFrame(frame, COLOR_THRESHOLD_MAP)
+            if M["m00"] != 0:
+                cX = int(M["m10"] / M["m00"])
+                cY = int(M["m01"] / M["m00"])
+                center = (cX, cY)
+                cv.drawContours(frame, [bestContour], -1, (0, 255, 0), 5)
+                cv.circle(frame, center, 5, (255, 255, 255), -1)
 
-    print(f"number of detected boxes : {len(targets)}")
+    return detectedColour, center
 
-    for index, target in enumerate(targets):
 
-        cX, cY = target["center"]
-        distance = target["distance"]
-        name = target["colourName"]
+def testOnImage():  
 
-        cv.drawContours(frame, target["contour"], -1, (0,0,0), 3)
-        cv.circle(frame, (cX, cY), 5, (0,0,0), -1)
-        infoText = f"#{index+1} {name.upper()} (Dist: {int(distance)})"
-        cv.putText(frame, infoText, (cX - 20, cY - 20), 
-                    cv.FONT_HERSHEY_SIMPLEX, 1.5, (255, 255, 255), 2)
-        
-    cv.imshow("Test", frame)
+    path = getTestImages("redCube1.jpeg")
+
+    image = cv.imread(path)
+
+    clr, (cx,cy) = getColourName(image)
+    
+
+    if clr is not None:
+        print(clr)
+        print(cx)
+        print(cy)
+    cv.imshow("Image", image)
 
     key = cv.waitKey(0)
 
     if key == ord("q"):
         cv.destroyAllWindows()
 
+#testOnImage()
 
 def testOnLive():
-
-
     cap = cv.VideoCapture(CAMERA_INDEX)
-    cap.set(cv.CAP_PROP_FRAME_WIDTH, 1024)
-    cap.set(cv.CAP_PROP_FRAME_HEIGHT, 720)
 
     while cap.isOpened():
+
         _, frame = cap.read()
-        height, width = frame.shape[:2]
 
-        targets = processFrame(frame, COLOR_THRESHOLD_MAP)
-        fps = fpsCounter(frame)
+        clr, (cx,cy) = getColourName(frame)
 
+        if clr is not None:
+            print(clr)
 
-        for index, target in enumerate(targets):
-            cX, cY = target["center"]
-            distance = target["distance"]
-            name = target["colourName"]
-
-            if len(targets) > 0:
-                countText = f"Detected Boxes: {len(targets)}"
-                cv.putText(frame, countText, (20, 40), cv.FONT_HERSHEY_SIMPLEX, 1.7, (0, 255, 255), 5)
-                cv.drawContours(frame, target["contour"], -1, (0,0,0), 5)
-                cv.circle(frame, (cX, cY), 5, (0,0,0), -1)
-                cv.circle(frame, ((width // 2), (height // 2)), 5, (0,255,0), -1)
-                infoText = f"#{index+1} {name.upper()} (Dist: {int(distance)})"
-                cv.putText(frame, infoText, (cX - 20, cY - 20), 
-                            cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-                fpsText = f"FPS: {int(fps)}"
-                cv.putText(frame, fpsText, (20, 70), cv.FONT_HERSHEY_SIMPLEX, 1.7, (0, 255, 0), 5)
-                
-        cv.imshow("Test on Live", frame)
+        cv.imshow("Frame", frame)
 
         key = cv.waitKey(1)
 
         if key == ord("q"):
             cv.destroyAllWindows()
             cap.release()
-
-        
-#testOnImage()
 
 testOnLive()

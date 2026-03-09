@@ -1,8 +1,15 @@
 import numpy as np
+import os 
 
 CAMERA_INDEX = 0
 ARDUINO_SERIAL_PORT = '/dev/cu.usbmodem1101'
-BAUD_RATE_SPEED = 9600
+ARDUINO_BAUDRATE = 9600
+MIN_DETECTION_AREA = 5000
+STABLE_THRESHOLD = 50
+REQUIRED_STABLE_TIME = 3.0 
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+TEST_IMAGES_DIR = os.path.join(BASE_DIR, "test-images")
+
 
 COLOR_THRESHOLD_MAP = {
     'red': {

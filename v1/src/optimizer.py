@@ -4,6 +4,7 @@ import os
 from config import COLOR_THRESHOLD_MAP, CAMERA_INDEX
 
 def updateConfigFile(colorName, lowerThreshold, upperThreshold):
+    
     configPath = os.path.join(os.path.dirname(__file__), "config.py")
     COLOR_THRESHOLD_MAP[colorName]["lower"] = lowerThreshold
     COLOR_THRESHOLD_MAP[colorName]["upper"] = upperThreshold
