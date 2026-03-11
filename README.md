@@ -1,12 +1,6 @@
-<<<<<<< HEAD
 # VisionArm-AI: Vision-Based Autonomous Robotic Arm (V1)
 
 VisionArm-AI, görüntü işleme tekniklerini kullanarak nesneleri renklerine göre sınıflandıran ve belirlenen konumlara taşıyan otonom bir "pick-and-place" robot kol sistemidir. Bu proje; **OpenCV**, **Python tabanlı otomasyon** ve **Arduino kontrollü donanım** entegrasyonunun bir sonucudur.
-=======
-# VisionArm: Vision-Based Autonomous Robotic Arm (V1)
-
-VisionArm, görüntü işleme tekniklerini kullanarak nesneleri renklerine göre sınıflandıran ve belirlenen konumlara taşıyan otonom bir "pick-and-place" robot kol sistemidir. Bu proje; **OpenCV**, **Python tabanlı otomasyon** ve **Arduino kontrollü donanım** entegrasyonunun bir sonucudur.
->>>>>>> bb4ddb440dfd2f001c10c1e464a72613c60278f4
 
 ## 🚀 Genel Bakış
 

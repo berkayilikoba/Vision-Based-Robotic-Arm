@@ -12,5 +12,4 @@ def getHomographyMatrix(ptsSrc, realWidth, realHeight, scale):
     return H, (bev_w, bev_h)
 
 def applyPerspective(img, H, size):
-
     return cv2.warpPerspective(img, H, size)

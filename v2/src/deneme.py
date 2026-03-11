@@ -19,7 +19,7 @@ def select_points(event, x, y, flags, param):
                     cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
         cv2.imshow("1. ADIM: KALIBRASYON", img_display)
 
-img_path = 'v2/test-images/mavi1.jpeg' 
+img_path = 'v2/test-images/mavi2.jpeg' 
 img = cv2.imread(img_path)
 
 if img is not None:
