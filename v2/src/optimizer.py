@@ -4,7 +4,6 @@ import os
 from config import COLOR_THRESHOLD_MAP, CAMERA_INDEX
 
 def updateConfigFile(colorName, lowerThreshold, upperThreshold):
-    
     configPath = os.path.join(os.path.dirname(__file__), "config.py")
     COLOR_THRESHOLD_MAP[colorName]["lower"] = lowerThreshold
     COLOR_THRESHOLD_MAP[colorName]["upper"] = upperThreshold
@@ -23,10 +22,14 @@ def updateConfigFile(colorName, lowerThreshold, upperThreshold):
             configFile.write(f"        'upper': np.array({upperList})\n")
             configFile.write(f"    }},\n")
         configFile.write("}\n")
-    print(f"Saved: {colorName.upper()}")
+    print(f"Kaydedildi: {colorName.upper()}")
 
-def runThresholdOptimizer():
-    videoCap = cv.VideoCapture(CAMERA_INDEX)
+def runImageThresholdOptimizer(imagePath):
+    img = cv.imread(imagePath)
+    if img is None:
+        print("Hata: Resim bulunamadı!")
+        return
+
     cv.namedWindow("Settings")
     cv.resizeWindow("Settings", 640, 300)
     activeColorMode = "red"
@@ -40,11 +43,9 @@ def runThresholdOptimizer():
     cv.createTrackbar("H-S", "Settings", 255, 255, onTrackbarChange)
     cv.createTrackbar("H-V", "Settings", 255, 255, onTrackbarChange)
 
-    while True:
-        ret, frame = videoCap.read()
-        if not ret: break
-        hsvFrame = cv.cvtColor(frame, cv.COLOR_BGR2HSV)
+    hsvFrame = cv.cvtColor(img, cv.COLOR_BGR2HSV)
 
+    while True:
         lH = cv.getTrackbarPos("L-H", "Settings")
         lS = cv.getTrackbarPos("L-S", "Settings")
         lV = cv.getTrackbarPos("L-V", "Settings")
@@ -54,13 +55,15 @@ def runThresholdOptimizer():
 
         lowerBound = np.array([lH, lS, lV])
         upperBound = np.array([hH, hS, hV])
+        
         colorMask = cv.inRange(hsvFrame, lowerBound, upperBound)
-        previewFrame = cv.bitwise_and(frame, frame, mask=colorMask)
+        previewFrame = cv.bitwise_and(img, img, mask=colorMask)
 
-        cv.putText(previewFrame, f"MODE: {activeColorMode.upper()}", (10, 40), 
+        cv.putText(previewFrame, f"MOD: {activeColorMode.upper()}", (10, 40), 
                     cv.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
-        cv.imshow("Raw", frame)
-        cv.imshow("Filtered", previewFrame)
+        
+        cv.imshow("Orijinal Resim", img)
+        cv.imshow("Filtrelenmis Resim", previewFrame)
 
         key = cv.waitKey(1) & 0xFF
         if key == ord('r'): activeColorMode = "red"
@@ -69,7 +72,6 @@ def runThresholdOptimizer():
         elif key == ord('s'): updateConfigFile(activeColorMode, lowerBound, upperBound)
         elif key == ord('q'): break
 
-    videoCap.release()
     cv.destroyAllWindows()
 
-runThresholdOptimizer()
+runImageThresholdOptimizer('v2/test-images/laptopsal.jpeg')
